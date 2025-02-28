@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: proxy
+  # serviceName: defines a headless service (clusterIP: none) which stateful pods use for communication, it does not load balance traffic and provides direct pod to pod communication, 
+  # k8s assigns stable dns to each pod like "nginx-container-0.nginx"
+  serviceName: "nginx" 
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: proxy
+    spec:
+      containers:
+        - name: nginx-container
+          image: nginx:latest
+          ports:
+            - containerPort: 3306
+          volumeMounts: #defines where in the container's file system the volume should be mounted
+            - name: nginx-storage
+              mountPath: /var/lib/mysql
+  # requests persistent storage for each pod in statefulset
+  # ex: pod nginx-container-0 gets PVC nginx-storage-nginx-0 
+  volumeClaimTemplates:
+    - metadata:
+        name: nginx-storage
+      spec:
+        # defines how multiple pods or nodes can access the persistent volume
+        # note: the persistent volume is outside the pod's env and pod uses it by using pvc
+      
+        # ReadWriteOnce: only one pod on one node can read and write, one node at once, one pod at a time, used for DBs
+        # ReadOnlyMany: Multiple pods can read but none can write, multiple nodes can access, multiple pods can access, used for shared config files, or logs
+        # ReadWriteMany: multiple pods on multiple nodes can read and write, multiple pod and multiple node access, used for shared storage (NFS, AWS EFS)
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 1Gi

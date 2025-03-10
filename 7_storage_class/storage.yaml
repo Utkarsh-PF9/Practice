@@ -1,0 +1,10 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: postgres-storage-class
+provisioner: k8s.io/minikube-hostpath # This is for minikube but we can specify other cloud providiers like gcp and aws
+# parameters: this property specifies the exact type of storage required like ssd or hdd the type of fs used 
+reclaimPolicy: Retain
+# WaitForFirstConstumer: do not attach a PV until the requested by the pod
+# immediate: immediately attach
+volumeBindingMode: Immediate

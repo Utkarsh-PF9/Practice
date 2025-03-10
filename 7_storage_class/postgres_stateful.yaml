@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: 
+  name: postgres-stateful-set
+spec:
+  serviceName: "postgres-storage-service" # this referes to a headless service but does not create it, so have to create it seperately
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-db
+  template:
+    metadata:
+      labels:
+        app: postgres-db
+    spec:
+      containers:
+        - name: postgres-db
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: "admin"
+            - name: POSTGRES_PASSWORD
+              value: "password123"
+            - name: POSTGRES_DB
+              value: "mydb"
+          volumeMounts:
+            - name: postgres-storage-volume
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage-volume
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: postgres-storage-class
+        resources:
+          requests:
+            storage: 1Gi
